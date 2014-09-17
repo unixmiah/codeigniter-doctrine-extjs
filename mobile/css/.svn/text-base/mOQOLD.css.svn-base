@@ -1,0 +1,27 @@
+.menu-wrap {
+	-webkit-column-count: 2;
+	text-align: center;
+	font-size: .75em;
+	line-height: 1.5;
+	padding: 5px;
+}
+.menu-wrap div[id="Exit"] {
+	-webkit-column-span: all;
+}
+.preloadImages {
+	display:none;
+}
+
+.x-label-align-top .x-form-label {
+	background: transparent;
+	border-top: none;
+}
+
+.client-title {
+	text-decoration: underline;
+	font-weight: normal;
+}
+.client-header {
+	font-size: 1.2em;
+	font-weight: bold;
+}

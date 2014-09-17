@@ -1,0 +1,70 @@
+﻿<!doctype html>
+<html manifest="manifest.php">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"> 
+	<title>mOQOLD - mobile</title>
+	<link rel="stylesheet" href="css/mOQOLD.css" type="text/css">
+	<link rel="stylesheet" href="css/mOQOLD.preload.css" type="text/css">
+	<link rel="stylesheet" href="css/mOQOLD.Calendar.css" type="text/css">
+	<link rel="stylesheet" href="sencha-touch-1.0.1a/resources/css/sencha-touch.css" type="text/css">
+	<script type="text/javascript" src="sencha-touch-1.0.1a/sencha-touch-debug.js"></script>
+    <script type="text/javascript" src="ux/phonegap/phonegap.js"></script>
+	<script type="text/javascript" src="js/Ext.data.DirectProxy.js"></script>
+	<script type="text/javascript" src="js/Ext.data.DirectReader.js"></script>
+	<link rel="stylesheet" href="css/Ext.form.ux.touch.MultiSelect.css" type="text/css">
+	<script type="text/javascript" src="js/Ext.form.ux.touch.MultiSelect.js"></script>
+	<link rel="stylesheet" href="css/Ext.form.ux.touch.ColorPickerField.css" type="text/css">
+	<script type="text/javascript" src="js/Ext.form.ux.touch.ColorPickerField.js"></script>
+	<script type="text/javascript" src="js/Ext.form.ux.touch.TimePicker.js"></script>
+	<script type="text/javascript" src="ux/ux.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.ScoreButton.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.MainApp.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.ActivityForm.js"></script>
+	<!--script type="text/javascript" src="js/mOQOLD.App.js"></script-->
+	<script type="text/javascript" src="js/mOQOLD.Calendar.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.DayCalendar.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.IncidentDetail.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.IncidentList.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.Models.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.MonthCalendar.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.ObservationDetail.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.ObservationList.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.OnlineChecker.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.ResidentList.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.ResidentDetail.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.Settings.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.SHA1.js"></script>
+	<script type="text/javascript" src="js/mOQOLD.Stores.js"></script> 
+    <script type="text/javascript" src="js/mOQOLD.ImageViewerList.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.ImageViewer.js"></script>
+	<script type="text/javascript" src="js/App.js"></script>
+	<script type="text/javascript" src="js/Ext.form.ux.Select.js"></script>
+	<script type="text/javascript" src="ux/calendar/Ext.ux.Calendar.js"></script>
+	<link rel="stylesheet" href="ux/calendar/css/Ext.ux.Calendar.css" type="text/css" />
+    
+</head>
+
+<body>
+
+<div class="preload">
+	<div id="incident"><img src="sencha-touch-1.0.1a/resources/themes/images/default/pictos/doc_compose2.png"><br>Incident</div>
+	<div id="help"><img src="sencha-touch-1.0.1a/resources/themes/images/default/pictos/help_black.png"><br>Help</div>
+	<div id="reports"><img src="sencha-touch-1.0.1a/resources/themes/images/default/pictos/chart1.png"><br>Reports</div>
+	<div id="search"><img src="sencha-touch-1.0.1a/resources/themes/images/default/pictos/search_black.png"><br>Search</div>
+	<div id="activities"><img src="sencha-touch-1.0.1a/resources/themes/images/default/pictos/calendar.png"><br>Activities</div>
+	<div id="settings"><img src="sencha-touch-1.0.1a/resources/themes/images/default/pictos/settings.png"><br>Settings</div>
+	<div id="residents"><img src="sencha-touch-1.0.1a/resources/themes/images/default/pictos/user.png"><br>Residents</div>
+	<div id="photo"><img src="sencha-touch-1.0.1a/resources/themes/images/default/pictos/photo_black2.png"><br>Photo</div>
+	<div id="Exit"><img src="sencha-touch-1.0.1a/resources/themes/images/default/pictos/lock_closed.png"><br>Exit</div>
+</div>
+<!-- These are templates that are used to display the list items -->
+<textarea id="participant-list" class="x-hidden-display"> 
+    <div class="participant-list-item">
+        <div><img class="participant-tnail" alt="{tag}" src="{[mOQOLD.getActivityImageURL(values.url)]}" width="50"/></div>
+        {tag}
+    </div>
+</textarea> 
+</body>
+
+</html>

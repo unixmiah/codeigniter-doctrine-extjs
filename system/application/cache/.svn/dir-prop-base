@@ -1,0 +1,9 @@
+K 10
+svn:ignore
+V 49
+api_cache.txt
+*.mine
+*.r1034
+api_cache.txt.r1036
+
+END

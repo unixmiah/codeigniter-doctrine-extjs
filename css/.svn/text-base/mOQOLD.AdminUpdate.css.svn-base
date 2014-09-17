@@ -1,0 +1,6 @@
+.composite-label {
+	text-align : right;
+}
+.composite-label-link {
+	color: #00f;
+}

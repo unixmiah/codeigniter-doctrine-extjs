@@ -1,0 +1,7 @@
+.month-menu-item {
+	text-align: center;
+}
+
+.calendar-day[hasEvent="true"] {
+	background-color: #ff0000;
+}

@@ -1,0 +1,20 @@
+<div id="static-content">
+<h3>mOQOLD Setup Wizard</h3>
+<p> 
+In order to use the mOQOLD site, This wizard is designed to quickly setup mOQOLD to meet the needs of your facility.  There are 11 steps which are need to be completed to customize the mOQOLD system to meet your facility's needs. which include: </p><BR>
+<b>Organization:</b> Record your Organization location, contact information. 
+<b>Activity:</b> List all the activity that can be conducted by the activity staff. 
+<b>Location:</b> List the location that activity take place. 
+<b>Weather:</b> List the weather conditions that can effect the activity. 
+<b>Noise:</b> List the noise conditions that can effect the activity. 
+<b>Animal:</b> List the animal that can effect the activity. 
+<b>Incident Cause:</b> List the cause of the incident that can happen.
+<b>Incident activity:</b> List the activity that incident will happen often. 
+<b>Body parts:</b> List the body parts that may get injury.  
+<b>Footwear:</b> List the footwear that can cause the fall incident. 
+<b>Injury:</b> List all the condition of injury that can happen to the body parts.<br />
+<br />
+<p>Complete the information for each page.  After each step, click <b>Next</b> button to continue and you can always click the <b>Previous</b> button to go back.  At any time, you can click the <b>Cancel</b> button to exit out of the wizard.  </p>
+<p><b>Or</b>, if you would like for the system to setup everything for you to a default configuration, just click the button below.<br />
+<span id="defaultButtonContainer">Setup the mOQOLD system using defaults</span></p>
+</div> 

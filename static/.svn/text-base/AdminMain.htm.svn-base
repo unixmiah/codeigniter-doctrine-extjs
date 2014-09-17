@@ -1,0 +1,40 @@
+<div ID="static-content">
+In order to maximize the use and benefit of the mOQOLD system, please configure the settings of the mOQOLD system to best meet your facility's needs.  The system is highly configurable to best your needs.  To ensure maximum use, we recommend:
+<br />
+<br />
+
+<ul id="square">
+<li><b>Facility Management</b>
+<ol>
+<li>Keeping your facility information current for support and reporting purposes.  <a href="#">Learn more.</a></li><br />
+<li>Keeping your contact information current for easy access on mobile devices.<a href="#">Learn more.</a></li><br />
+<li>Keeping your resident information current for easy access on mobile devices.<a href="#">Learn more.</a></li><br />
+<li>Setting alerts to keep you informed on the quality of life of your residents.<a href="#">Learn more.</a></li><br />
+<li>Managing staff (user) and their access to the mOQOLD system.<a href="#">Learn more.</a></li><br />
+<li>Managing staff (user roles) and their access to the mOQOLD system.<a href="#">Learn more.</a></li><br />
+</ol>
+</li>
+
+<li><b>mOQOLD Setup (Handheld configuration)</b>
+<ol>
+<li>Managing your facility location for recording mOQOLD activities.<a href="#">Learn more.</a></li><br />
+<li>Managing approved activities for recording mOQOLD observations.<a href="#">Learn more.</a></li><br />
+<li>Managing weather information for recording mOQOLD observations.<a href="#">Learn more.</a></li><br />
+<li>Managing noise information for recording mOQOLD observations.<a href="#">Learn more.</a></li><br />
+<li>Managing animal information for recording mOQOLD observations.<a href="#">Learn more.</a></li><br />
+<li>Managing QoL Score information for recording mOQOLD observations.<a href="#">Learn more.</a></li><br />
+<li>Managing Dimension information for recording mOQOLD observations.<a href="#">Learn more.</a></li><br />
+<li>Managing mOQOLD configuration information to customize mOQOLD for your use.<a href="#">Learn more.</a></li><br />
+</ol>
+</li>
+<li><b>Falls Setup</b>
+<ol>
+<li>Managing body part information for recording falls incident at your facility.<a href="#">Learn more.</a></li><br />
+<li>Managing fall causal information for recording falls incident at your facility.<a href="#">Learn more.</a></li><br />
+<li>Managing footwear information for recording falls incident at your facility.<a href="#">Learn more.</a></li><br />
+<li>Managing pre-fall activity information for recording falls incident at your facility.<a href="#">Learn more.</a></li><br />
+<li>Managing injury report information for recording falls incident at your facility.<a href="#">Learn more.</a></li><br />
+</ol>
+</li>
+</ul>
+</div>

@@ -1,0 +1,126 @@
+﻿.menu-wrap {
+	-webkit-column-count: 2;
+	text-align: center;
+	font-size: .75em;
+	line-height: 1.5;
+	padding: 15px;
+}
+.menu-wrap div[id="Exit"] {
+	-webkit-column-span: all;
+}
+.preloadImages {
+	display:none;
+}
+
+.x-label-align-top .x-form-label {
+	background: transparent;
+	border-top: none;
+}
+
+.client-info {
+	margin: 10px;
+}
+
+.client-info-photo {
+	margin: 10px;
+	float:right;
+}
+
+.client-title {
+	text-decoration: underline;
+	font-weight: normal;
+}
+
+.client-header {
+	font-size: 1.2em;
+	font-weight: bold;
+}
+
+.activity {
+	background-image:url(../images/activitysetup_icon.png) !important;
+}
+
+.participants{
+	background-image:url(../images/residentinfo_icon.png) !important;
+	background-size: 40px 40px;
+}
+
+.fallincident{
+	background-image:url(../images/incidentcause_icon.png) !important;
+	background-size: 40px 40px;
+}
+
+
+.usrsettings{
+	background-image:url(../images/siteconfig_icon.png) !important;
+	background-size: 40px 40px;
+}
+
+.m-incidentList td
+{
+	padding:2px;
+	vertical-align:top;
+	border-bottom: 1px solid black;
+}
+
+.m-observationList-cname
+{
+	float: left;
+	padding-right: 10px;
+}
+
+.m-observationList-score  
+{
+	width:110px;
+	float: left;
+	padding-right:10px;
+	color:Blue;
+}
+
+.m-observationPresent 
+{
+    background-image:url(../images/calendar-sprites.gif);
+    background-repeat:no-repeat;
+    display : inline-block;
+    height : 11px;
+    margin-left:5px;
+    width:15px;
+    background-position: -14px 0px;
+}
+
+.scoreBtnFont 
+{
+    font-size : 70%;
+    margin-bottom: 10px;
+}
+
+.participant-tnail {
+	width: 50px;
+	height: 50px;
+	background-position: center center;
+	-webkit-border-radius: 5px;
+	overflow: hidden;
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	-webkit-box-shadow: #ccc 0 1px 2px;
+}
+
+.participant-list-item {
+	height: 70px;
+	position: relative;
+	overflow: hidden;
+	font-weight: bold;
+	padding: 20px 10px 10px 70px !important;
+	text-shadow: rgba(255, 255, 255, 0.25) 0 0.08em 0;
+}
+.participant-list-item.x-view-selected {
+	background: #315d94 none !important;
+	color: #d3e0f1 !important;
+}
+.participant-list-item img {
+	position: absolute;
+	left: 0px;
+	top: 0;
+}
+

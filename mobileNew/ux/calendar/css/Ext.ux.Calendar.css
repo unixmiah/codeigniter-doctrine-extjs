@@ -1,0 +1,97 @@
+/*
+	Inspired from jQTouch iCal
+*/
+.ux-cal {
+	color:#3F4E5E;
+	float:left;
+	background-color: #fff;
+	width: 320px;
+}
+.ux-cal table {
+	border-collapse: separate;
+	/*border: 0px solid #9DABCE;
+	border-width: 0px 0px 1px 1px;*/
+	/*margin: 10px auto;*/
+	font-size: 20px;
+	font-family: Helvetica;
+	text-align:center;
+}
+.ux-cal td {
+	background:url("../images/cells.png") repeat scroll 0 0 transparent;
+	border-color:#A3A7AF;
+	border-style:solid;
+	border-width:0 1px 1px 0;
+	font-weight:bold;
+	height:30px;
+	position:relative;
+	text-align:center;
+	vertical-align:middle;
+	width:45px;
+}
+.ux-cal td:last-child, .ux-cal th:last-child {
+	border-right: 0px;
+	width: 44px;
+}
+.ux-cal td.padding {
+	background: url(../images/calpad.jpg);
+}
+.ux-cal td.hasevent {
+
+}
+.ux-cal td.prevmonth, .ux-cal td.nextmonth, .ux-cal td.otherMonth {
+	color: #89909A;
+}
+
+.ux-cal td.today {
+	background-position: 90px 0px;
+	color: white;
+}
+.ux-cal td.selected {
+	background-position: 45px 0px;
+	color: white;
+}
+
+.ux-cal td.date_has_event {
+	background-position: 0px 33px;
+}
+.ux-cal td.today_date_has_event {
+	background-position: 90px 33px;
+	color: white;
+}
+.ux-cal td.selected_date_has_event {
+	background-position: 45px 33px;
+	color: white;
+}
+
+.ux-cal thead {
+	background: #fff url(../images/header.png) repeat-x;
+}
+.ux-cal thead  th {
+	font-size: 8px; vertical-align: bottom; padding-bottom: 3px; color: #6c6c6c;
+	height: 40px;
+	text-align:center;
+}
+.ux-cal thead  th:first-child {
+	background-image: url(../images/header_left.png);
+	cursor: pointer;
+}
+.ux-cal thead  th:last-child {
+	background-image: url(../images/header_right.png);
+	cursor: pointer;
+}
+.ux-cal tfoot th {
+	background: #fff url(../images/footer.png) repeat-x;
+	height: 21px; border-bottom:0;
+}
+.ux-cal thead th span {
+	font-size:20px;
+	height:30px;
+	left:45px;
+	position:absolute;
+	text-align:center;
+	vertical-align:top;
+	top:0px;
+	font-weight:bold;
+	width:230px;
+	z-index:999;
+}

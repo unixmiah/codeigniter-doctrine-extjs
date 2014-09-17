@@ -1,0 +1,19 @@
+.default-item {
+	background-color: #00f;
+	color: #fff;
+	height: 50px;
+	margin-bottom: 5px;
+}
+
+.activity-over {
+    background-color: #EFEFEF;
+	color: #000;
+}
+.activity-selected {
+    background-color: #DFE8F6;
+	color: #000;
+}
+
+.activity-label {
+	text-decoration: underline;
+}

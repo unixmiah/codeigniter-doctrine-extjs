@@ -1,0 +1,1170 @@
+<?php
+class ControllerBase {
+    protected $checkFields = array();
+    protected $keyField = 'ID';    
+    protected $listFields = '*';
+    protected $queryFields = null;
+	protected $blobFields = null;
+    protected $insertFields = null;
+    protected $deleteFlag = false;
+    protected $oneToOne = null;
+    protected $oneToMany = null;
+    protected $response = null;
+    protected $updateFields = array();
+    protected $tableName = null;
+	protected $allowedRoles = array();
+	protected $pageName = null;
+	protected $updateAuditInfo = true;
+	protected $updateOrgId = false;
+	protected $splitDateFields = null;
+	protected $saveRelationsLater = false;
+	protected $exceptionMap = array(
+		'clientU' => 'Please review your input',
+		'clientID_2' => 'Please review your input',
+		'observU' => 'Please review your input'
+	);
+
+	function ControllerBase() {
+/*
+		$allowed = true;
+		if($requiredRoles != null) {
+			$allowed = false;
+			$user = $this->getCurrentUser();
+			$role = $user == null ? null : $user->userRoleID;
+			foreach($allowedRoles as $allowedRole) {
+				if($role == $allowedRole) {
+					$allowed = true;
+					break;
+				}
+			}
+		}
+		if(!$allowed) {
+			throw new Exception("
+		}*/
+		
+	}
+
+	protected function isInRole($roleNames) {
+		if(!is_array($roleNames)) {
+			$roleNames = array($roleNames);
+		}
+		$userRole = $this->getCurrentUserRole();
+		$result = false;
+		foreach($roleNames as $role) {
+			if($role == $userRole) {
+				$result = true;
+				break;
+			}
+		}
+		return $result;
+	}
+    
+    protected function fetchById($id, $tableName = null) {
+		if(!$this->canRead()) {
+			return null;
+		}
+        if(!isset($tableName) || $tableName == null) {
+          $tableName = $this->tableName;
+        }
+        if($id == 0) {
+          $obj = new $tableName;
+        } else {
+			$findFunc = "findBy".$this->keyField;
+          $obj = Doctrine_Core::getTable($tableName)->$findFunc($id);
+		  $obj = $obj[0];
+        }
+        return $obj;
+    }
+
+    protected function getSession() {
+        $CI = get_instance();
+        return $CI->session;
+    }
+
+    protected function getSessionValue($key) {
+        return $this->getSession()->userdata($key);
+    }
+
+    protected function setSessionValue($key, $value) {
+        $this->getSession()->set_userdata($key, $value);
+    }
+
+    
+	protected $currentUser = null;
+    protected function getCurrentUser(){
+		if($this->currentUser == null) {
+			$userId = $this->getSession()->userdata('user');
+			
+			$this->currentUser = Doctrine_Core::getTable('User')->find($userId);
+		}
+		return $this->currentUser;
+    }
+
+/*
+	protected function getUserRole() {
+		$user = $this->getCurrentUser();
+		$role = $user == null ? null : $user->userRoleID;
+		return $role;
+	}
+*/
+    protected function fetchChildren($obj, $returnValue) {
+      if($this->oneToOne != null) {
+        foreach($this->oneToOne as $propertyName => $info) {
+          $id = $obj[$propertyName];
+		  $data = null;
+		  if($id != null) {
+			if(is_object($id)) {
+				$data = $id->toArray();
+			} else {
+				$data = $this->fetchById($id, $info['tableName'])->toArray();
+			}
+		  }
+          if($data != null && isset($info['flatten'])) {
+			if($info['flatten'] === true) {
+				$returnValue = array_merge($returnValue, $data);
+			} else {
+				$prefix = $info['flatten'];
+				foreach($data as $key => $value) {
+					$returnValue[$prefix . $key] = $value;
+				}
+			}
+          } else {
+            $returnValue[$propertyName] = $data;
+          }
+        }
+      }
+      
+      if(isset($this->oneToMany)) {
+        foreach($this->oneToMany as $propertyName => $info) {
+          $returnValue[$propertyName] = implode(',', $this->fetchOneToMany($obj, $info));
+        }
+      }
+      return $returnValue;
+    }
+    
+    protected function fetchOneToMany($obj, $info) {
+      $col = $info['col'];
+      $joinColumn = isset($info['joinColumn']) ? $info['joinColumn'] : $this->tableName;
+
+      $q = Doctrine_Query::create()->select($col)->from($info['tableName'])->where($joinColumn.' = ?', $obj->ID);
+      $results = $q->fetchArray();
+      $data = array();
+      $count = count($q);
+      for($i = 0; $i < $count; $i++) {
+        $data[$i] = $results[$i][$col];
+      }
+      return $data;
+    }
+	
+	 protected function getLoadFormID($params) {
+               if(is_object($params)) {
+                       if (isset($params->ID)) {
+                               return $params->ID;
+                       }
+               } else {
+                       if (isset($params["ID"])) {
+                               return $params['ID'];
+                       }
+               }
+               return null;
+       }
+ 
+    
+    /**
+     * @remotable
+     */
+    public function loadForm($params){
+        $id = $this->getLoadFormID($params);
+		$obj = $this->fetchById($id);
+        $data = null;
+        $success = false;
+        if($obj != null) {
+            $data = $obj->toArray();
+            $data = $this->fetchChildren($obj, $data);
+            $success = true;
+        }
+
+		$data = $this->splitDates($data);
+
+		$data = $this->unsetBlobs($data);
+
+        $this->response['data'] = $data;
+        $this->response['success'] = $success;
+        return $this->response;
+    }
+
+	protected function unsetBlobs($data) {
+		$blobFields = $this->blobFields;
+		if(!empty($blobFields) ) {
+			foreach($blobFields as $field) {
+				unset($data[$field]);
+			}
+		}
+		return $data;
+	}
+
+	protected function splitDates($data) {
+		if(isset($this->splitDateFields)) {
+			foreach($this->splitDateFields as $field => $prefix) {
+				$value = $data[$field];
+				if($value != null) {
+					$value = strtotime($value);
+					$data[$prefix . "Date"] = date("m/d/Y", $value);
+					$data[$prefix . "Time"] = date("g:ia", $value);
+				}
+			}
+		}
+		return $data;
+	}
+
+    /**
+     * @remotable
+     */
+    public function delete($id){
+        if(is_object($id)) {
+            $id = $id->items; 
+        }
+   		//$auditlog = new Auditlog();
+   		//$auditlog['user'] = $this->getCurrentUser();
+    	if(!$this->canDelete()){ 
+    		$auditlog['action'] = "FAILED DELETE ".$this->tableName;
+    		$auditlog['details'] = "No permission to delete ".$this->tableName;
+    		$auditlog->save();
+
+            $this->response = $this->listAll(array('ID' => $obj->ID));
+    		$this->response['success'] = false;
+    		$this->response['msg'] = 'You do not have permission to delete this object';
+
+    	} else {
+    		$this->response['success'] = true;
+            $this->response['items'] = array();
+    	}
+    	
+        $obj = $this->fetchById($id);
+        if($this->deleteFlag) {
+          $obj->deleted = 1;
+          $obj->save();
+        } else {
+          $obj->delete();
+        }
+        //$auditlog['action'] = "DELETE ".$this->tableName;
+        //$auditlog['details'] = json_encode($obj->toArray());
+        //$auditlog->save();
+        
+        return $this->response;
+    }
+    
+    protected function getUploadedContent($fieldName) {
+    	if(!isset($_FILES[$fieldName])) {
+			return null;    		
+    	}
+	   	$fileName = $_FILES[$fieldName]['name'];
+		$tmpName  = $_FILES[$fieldName]['tmp_name'];
+		$fileSize = $_FILES[$fieldName]['size'];
+		$fileType = $_FILES[$fieldName]['type'];
+		
+		if($_FILES[$fieldName]['size'] > 0) {
+			$fp      = fopen($tmpName, 'r');
+			$content = base64_encode(fread($fp, filesize($tmpName)));
+	
+			if(!get_magic_quotes_gpc()){
+	    		$content = addslashes($content);
+			}
+			
+			fclose($fp);
+	    	
+			return $content;
+		} else {
+			return null;
+		}
+    }
+    
+    protected function updateOneToOne($obj, $data, $oneToOne) {
+      if($oneToOne != null) {
+        foreach($oneToOne as $propertyName => $info) {
+          $keyField = 'ID';
+          if(isset($info['flatten']) && $info['flatten']) {
+			$keyField = $propertyName;
+			if($info['flatten'] === true) {
+				$values = $data;
+				 $values[$keyField] = $obj->$propertyName;
+			} else {
+				$prefix = $info['flatten'];
+				$values = array();
+				foreach($data as $key => $value) {
+					if(strpos($key, $prefix) === 0) {
+						$subKey= substr($key, strlen($prefix));
+						$values[$subKey] = $value;
+					}
+				}
+				$values[$propertyName] = $obj->$propertyName;
+			}
+          } else {
+            $values = json_decode($data[$propertyName], true);
+          }
+          $childObj = $this->updateRecord($values, $info, $keyField);
+          $obj->$propertyName = $childObj;
+        }
+      }
+    }
+    
+    protected function updateOneToMany($obj, $data, $oneToMany) {
+      if($oneToMany && $oneToMany != null) {
+        foreach($oneToMany as $propertyName => $info) {
+          $value = $data[$propertyName];
+          $values = strlen($value) == 0 ? array() : explode(',', $value);
+
+          $oldValues = $this->fetchOneToMany($obj, $info);
+          $toInsert = array_diff($values, $oldValues);
+          $toDelete = array_diff($oldValues, $values);
+
+          $joinColumn = isset($info['joinColumn']) ? $info['joinColumn'] : $this->tableName;
+          
+          foreach($toInsert as $index => $value) {
+            $childObj = new $info['tableName'];
+            $childObj->$joinColumn = $obj->ID;
+            $childObj->$info['col'] = $value;
+            $childObj->save();
+          }
+          
+          $toDeleteIds = array();
+          $i = 0;
+          foreach($toDelete as $index => $value) {
+            $toDeleteIds[$i++] = $value;
+          }
+          if(count($toDeleteIds) > 0) {
+            $q = Doctrine_Query::create()->delete($info['tableName'])->where($joinColumn.' = '.$obj->ID.' AND '.$info['col'].' IN ('.implode(',', $toDeleteIds).')');
+            $q->execute();
+          }
+        }
+      }
+    
+    }
+    
+    protected function updateRecord($a, $info = null, $keyField = 'ID'){
+      $id = isset($a[$keyField]) ? $a[$keyField] : 0;
+      
+      //$auditlog = new Auditlog();
+      //$auditlog['user'] = $this->getCurrentUser();
+      if($info == null) {
+        $tableName = $this->tableName;
+        $insertFields = $this->insertFields;
+        $updateFields = $this->updateFields;
+		$blobFields = $this->blobFields;
+        $checkFields = $this->checkFields;
+        $deleteFlag = $this->deleteFlag;
+        $oneToOne = $this->oneToOne;
+        $oneToMany = $this->oneToMany;
+		$splitDateFields = $this->splitDateFields;
+      } else {
+        $tableName = $info['tableName'];
+        $insertFields = isset($info['insertFields']) ? $info['insertFields'] : null;
+        $updateFields = $info['updateFields'];
+		$blobFields = isset($info['blobFields']) ? $info['blobFields'] : null;
+        $checkFields = isset($info['checkFields']) ? $info['checkFields'] : null;
+        $deleteFlag = isset($info['deleteFlag']) ? $info['deleteFlag'] : false;
+        $oneToOne = isset($info['oneToOne']) ? $info['oneToOne'] : null;
+        $oneToMany = isset($info['oneToMany']) ? $info['oneToMany'] : null;
+		$splitDateFields = isset($info['splitDateFields']) ? $info['splitDateFields'] : null;
+      }
+
+	  if($splitDateFields) {
+		foreach($this->splitDateFields as $field => $prefix) {
+			$datePart = $a[$prefix . "Date"];
+			$timePart = $a[$prefix . "Time"];
+			$value = $this->toSqlDate(strtotime($datePart . " " . $timePart));
+			$a[$field] = $value;
+		}
+	  }
+
+
+      $oneToOne =  $this->cleanOneToOne($a, $oneToOne); 
+      $obj = $this->fetchById($id, $tableName);
+      $table = $obj->getTable();
+      if($id == 0) {
+      	if(!$this->canCreate()){ 
+    		//$auditlog['action'] = "FAILED CREATE ".$this->tableName;
+    		//$auditlog['details'] = "No permission to create ".$this->tableName;
+    		//$auditlog->save();
+    		$this->response['success'] = false;
+    		$this->response['msg'] = 'You do not have permission to create objects of this type';
+    		return;
+    	}  
+      
+        if($deleteFlag) {
+          $obj->deleted = 0;
+        }
+        if($insertFields != null) {
+          foreach ($insertFields as $field) {
+            $obj->$field = $this->normalizeValue($table, $field, $a[$field]);
+          }
+        }
+      } else {
+      	if(!$this->canSave()){ 
+    		//$auditlog['action'] = "FAILED SAVE ".$this->tableName;
+    		//$auditlog['details'] = "No permission to save ".$this->tableName;
+    		//$auditlog->save();
+    		$this->response['success'] = false;
+    		$this->response['msg'] = 'You do not have permission to save objects of this type';
+    		return;
+    	}      
+      }
+        
+      foreach ($updateFields as $field) {
+        if(isset($a[$field])) {
+        	$value = $a[$field];
+            $value = $this->normalizeValue($table, $field, $value);
+            $obj->$field = $value;
+        }
+      }
+        
+
+      foreach ($updateFields as $field) {
+        if(isset($a[$field])) {
+        	$value = $a[$field];
+            $value = $this->normalizeValue($table, $field, $value);
+            $obj->$field = $value;
+        }
+      }
+	  if($blobFields) {
+		foreach($blobFields as $field) {
+        	$value = $this->getUploadedContent($field);
+        	if($value != null) {
+        		$obj->$field = $value;
+        	}
+		}
+	  }
+	  if($this->updateAuditInfo) {
+		$obj->rTime = date("Y-m-d : H:i:s", time());
+		$obj->rUser = $this->getCurrentUser()->ID;
+	  }
+	  if($this->updateOrgId) {
+		$obj->orgID = $this->getCurrentUser()->orgID;
+	  }
+      if($checkFields != null) {
+        foreach ($checkFields as $field) {
+          $obj->$field = isset($a[$field]) ? 1 : '0';
+        }
+      }
+      
+	  if($id !== 0 || $this->saveRelationsLater === false) {
+		$this->updateOneToOne($obj, $a, $oneToOne);
+	  }
+      
+      $obj->save();
+      
+	  if($id === 0 && $this->saveRelationsLater === true) {
+		$this->updateOneToOne($obj, $a, $oneToOne);
+		$obj->save();
+	  }
+
+      if($id == 0){
+      	//$auditlog['action'] = "CREATE ".$this->tableName;
+    	//$auditlog['details'] = json_encode($obj->toArray());
+    	//$auditlog->save();
+      } else {
+      	//$auditlog['action'] = "SAVE ".$this->tableName;
+    	//$auditlog['details'] = json_encode($obj->toArray());
+    	//$auditlog->save();
+      }
+      $this->updateOneToMany($obj, $a, $oneToMany);
+		
+	  $this->response['success'] = true;
+	  
+      return $obj;
+    }
+
+    /**
+     * @remotable
+     * @formHandler
+     */
+    public function saveForm($a) {
+		try {
+			$a['ID'] = $this->getLoadFormID($a);    		
+			$obj = $this->updateRecord($a);
+			if($this->response['success'] == true){
+				$this->response['data'] = $this->splitDates($obj->toArray());
+				$this->response['data'] = $this->unsetBlobs($this->response['data']);
+
+			}
+		} catch (Exception $e) {
+			return $this->handleSaveException($e);
+		}
+		return $this->response;
+    }
+
+
+    /**
+     * @remotable
+     */
+    public function update($a){
+		try {
+    		$a = (array) $a->items;
+    		$a['ID'] = $this->getLoadFormID($a);
+			$obj = $this->updateRecord((array) $a);
+			if($this->response['success'] == true){
+				$data = (object) array('ID' => $obj->ID);
+				return $this->listAll($data);
+			}
+		} catch (Exception $e) {
+			return $this->handleSaveException($e);
+		}
+		return $this->response;
+    }
+
+	protected function handleSaveException($e) {
+		//$pattern = "/Integrity constraint violation: 1062 Duplicate entry \'(.+)\' for key \'(.+)\'/";
+		$msg = $e->getMessage();
+		//$matchCount = preg_match($pattern, $msg, $matches);
+		$pos = strpos($msg, "1062 Duplicate entry");
+		if($pos !== false) {
+			$msg = "Duplicate entry, please check your information.";
+		}
+		
+		return array(
+			'success' => false,
+			'msg' => $msg,
+			'items' => array()
+		);
+	}
+    
+    protected function normalizeValue($table, $field, $value) {
+		$columnType = $table->getTypeOfColumn($field);
+		if(!$columnType) {
+			$columnType = $table->getTypeOfColumn(strtolower($field));
+		}
+		switch($columnType) {
+        case 'date':
+          if(strlen($value) > 0) {
+			//date format independant now
+			$time = strtotime($value);
+			$value = date("Y-m-d", $time);
+          } else {
+			$value = null;
+		  }
+          break;
+		case 'timestamp':
+			$value = $this->toSqlDate(strtotime($value));
+			break;
+        case 'integer':
+        case 'decimal':
+          if(strlen($value) == 0) {
+            $value = null;
+          }
+      }
+      return $value;
+    }
+    
+    // Methods to be overriden by extending classes
+    
+    // Extending class to add where args to $query (Doctrine object) and then return it
+    protected function applyCustomFilters($query, $data) {
+    }
+
+    // Extending class to change $oneToOne so that it is properly configured. Used mostly to remove irrelevant wheres
+    protected function cleanOneToOne($a, $oneToOne){
+    	return $oneToOne; // Default, give back what we get
+    }
+
+	private $permission = null;
+	
+	protected function getPageID($pageName) {
+		//what does this do?
+		/*if($pageName) {
+			$pageName = $this->pageName == null ? $this->tableName : $this->pageName;
+		}*/
+		$q = Doctrine_Query::create()->select('p.ID')->from("PageRef p");
+		$q->where('p.name = ?', $pageName);
+		$pageInfo = $q->fetchOne();
+		$pageID = 0;
+		if (isset($pageInfo->ID)) {
+			$pageID = $pageInfo->ID;
+		}
+		return $pageID;
+	}
+
+	protected function hasPermission($permissionType) {
+		if($this->permission == null) {
+			$user = $this->getCurrentUser();
+			if($user) {
+				$q = Doctrine_Query::create()->select('p.*')->from("Permission p, RolePermission rp, PageRef page");
+				$q->where('rp.userRoleId = ?', $user->userRoleID);
+				$q->andWhere('p.PageID = page.ID AND rp.PermissionID = p.ID');
+				$q->andWhere('page.name = ?', $this->pageName == null ? $this->tableName : $this->pageName);
+				$this->permission = $q->fetchOne();
+			}
+			if($this->permission == null) {
+				$this->permission = array('_create' => '0', '_update' => '0', '_delete' => '0', '_lock' => '1', '_read' => '0');
+				$this->permission = (object) $this->permission;
+			}
+		}
+
+		return $this->permission->_lock == "0" && $this->permission->$permissionType == '1';
+	}
+
+    protected function canRead(){
+		return $this->hasPermission('_read');
+	}
+
+    protected function canSave(){
+		return $this->hasPermission('_update');
+	}
+
+	protected function canCreate(){
+		return $this->hasPermission('_create');
+	}
+
+	protected function canDelete(){
+		return $this->hasPermission('_delete');
+	}
+
+    // Can be overridden for child classes for further processes if needed
+    protected function prepareListQuery($q) {
+        $q->from($this->tableName);
+    }   
+
+    /**
+      * @remotable
+      */
+    public function listAll($a) {
+
+      if (isset($a->dateNeeded)){
+	$dateNeeded = $a->dateNeeded;
+      } else {
+	$dateNeeded = "null";
+      }
+
+
+		if(!$this->canRead()) {
+			$this->response['msg'] = 'Permission denied';
+			$this->response['success'] = false;
+			return $this->response;
+		}
+		
+      $q = Doctrine_Query::create()->select('count(*)');
+
+      $this->prepareListQuery($q, $dateNeeded);
+
+      if($this->deleteFlag) {
+        $q->where('deleted = ?' , 0);
+      }
+
+      if(isset($a->ID)) {
+        $q->where($this->keyField . ' = ?', $a->ID);
+      }
+
+      if(isset($a->query)){
+    		$q->andWhere($this->defaultQueryField.' LIKE "%'.$a->query.'%"');
+      }
+      
+      $queryFields = $this->queryFields;
+      if($queryFields != null) {
+        foreach($queryFields as $key => $value) {
+          if(isset($a->$key)) {
+            $toSearch = $a->$key;
+            if(!isset($value)) {
+              $value = ' LIKE ';
+            }
+            if($value = ' LIKE ') {
+              $toSearch = '%'.$toSearch.'%';
+            }
+            $q->andWhere($key.$value.' ? ', $toSearch);
+          }
+        }
+      }
+
+      $this->applyCustomFilters($q, $a);
+
+      $this->response['total'] = $q->execute(array(), Doctrine::HYDRATE_NONE);
+      $this->response['total'] = $this->response['total'][0];
+      $this->response['success'] = true;
+
+	  if(!isset($a->start)) {
+		$a->start = 0;
+	  }
+		
+      if($this->response['total'] > 0) {
+        if(isset($a->limit)) {
+          $q->limit($a->limit)->offset($a->start);
+        }
+  		
+        if(isset($a->sort)) {
+			if (isset($a->dir)) {
+				$q->orderBy($a->sort . " " . $a->dir);
+			} elseif (isset($a->direction)) {
+				$q->orderBy($a->sort . " " . $a->dir);
+			}
+        }
+  		$q->select($this->listFields);
+        $this->response['items'] = $q->execute(array(), Doctrine::HYDRATE_ARRAY);
+      } else {
+        $this->response['items'] = array();
+      }
+		
+      return $this->response;
+    }
+    
+    
+
+    /**
+      * @remotable
+      */
+    public function getOrgID(){
+   		$user = $this->getCurrentUser();
+   		if($user == null) {
+   			return 0;
+   		}
+    	return $user->orgID;
+    }
+    
+	/**
+      * @remotable
+      */
+    public function getUserID(){
+   		$user = $this->getCurrentUser();
+   		if($user == null) {
+   			return 0;
+   		}
+    	return $user->ID;
+    }
+    
+	/**
+      * @remotable
+      */
+    public function getUserName(){
+   		$user = $this->getCurrentUser();
+   		if($user == null) {
+   			return 0;
+   		}
+    	return $user->login;
+    }
+    
+    
+    
+    protected function sendMail($to, $subject, $message){
+    	
+    	// To send HTML mail, the Content-type header must be set
+		$headers  = 'MIME-Version: 1.0' . "\r\n";
+		$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+
+		// Additional headers
+		$headers .= 'From: mOQOLD <support@moqold.com>' . "\r\n";
+		
+		// To 
+		$to = $to;
+				
+		// Mail it
+		mail($to, $subject, $message, $headers);
+    }
+    
+	//function to encrypt the string
+	protected function encode5t($str)
+	{
+	  for($i=0; $i<5;$i++)
+	  {
+	    $str=strrev(base64_encode($str)); //apply base64 first and then reverse the string
+	  }
+	  return $str;
+	}
+	
+	//function to decrypt the string
+	protected function decode5t($str)
+	{
+	  for($i=0; $i<5;$i++)
+	  {
+	    $str=base64_decode(strrev($str)); //apply base64 first and then reverse the string
+	  }
+	  return $str;
+	}
+
+	protected function toSqlDate($date) {
+		return date("Y-m-d H:i:s", $date);
+	}
+	
+	protected function getDateFormat($format="Y-m-d : H:i:s", $time=""){
+		if ($time == "") {
+			$time = time();
+		}
+		return date($format, $time);
+	}
+	
+	protected function generateHash($password) {
+		return sha1($password);
+	}
+	
+	
+	/**
+    * @remotable
+    * @formHandler
+    */
+	public function getWeekRange($date, $start=true)
+	{
+	  $week = date('W', strtotime($date));
+      $year = date('Y', strtotime($date));
+    	
+	  $from = date("Y-m-d", strtotime("{$year}-W{$week}-0")); 
+	  //Returns the date of saturday in week
+	  $to = date("Y-m-d", strtotime("{$year}-W{$week}-6"));   
+	  //Returns the date of sunday in week
+	  return $from."|".$to;
+	}
+	
+
+	/**
+    * @remotable
+    * @formHandler
+    */
+	public function getDateRange($date, $duration=weekly)
+	{
+
+	  if($duration == "weekly"){
+		  $week = date('W', strtotime($date));
+	      $year = date('Y', strtotime($date));
+	    	
+		  $from = date("Y-m-d", strtotime("{$year}-W{$week}-0")); 
+		  //Returns the date of saturday in week
+		  $to = date("Y-m-d", strtotime("{$year}-W{$week}-6"));   
+		  //Returns the date of sunday in week
+		  return $from."|".$to;	  	
+		  
+	  }	elseif ($duration == "monthly"){
+		  $month = date('M', strtotime($date));
+	      $year = date('Y', strtotime($date));
+	    	
+		  $from = date("Y-m-d", strtotime("{$year}-M{$month}-0")); 
+		  //Returns the date of saturday in week
+		  $to = date("Y-m-d", strtotime("{$year}-W{$week}-6"));   
+		  //Returns the date of sunday in week
+		  return $from."|".$to;	  	
+	  }
+	  
+	}
+	
+	
+	
+	
+		
+	/**	
+	################################################################################
+	# mOQOLD iCal Parser                                                           #
+	# Currently the functions below will cover the entire scope of dealing with an #
+	#  iCal file. For now we're only using parse rrule function. The rest of the   #
+	#  functions will be here for when we take full advatange of the iCal.         #                                                                      #
+	#                                                                              #
+	################################################################################
+	**/
+
+	/**
+	 * Text in file
+	 *
+	 * @var string
+	 */
+	var $file_text;
+	/**
+	 * This array save iCalendar parse data
+	 *
+	 * @var array
+	 */
+	var $cal;
+	/**
+	 * Number of Events
+	 *
+	 * @var integer
+	 */
+	var $event_count;
+	/**
+	 * Number of ToDos
+	 *
+	 * @var unknown_type
+	 */
+	var $todo_count;
+	/**
+	 * Help variable save last key (multiline string)
+	 *
+	 * @var unknown_type
+	 */
+	var $last_key;
+	/**
+	 * Read text file, icalender text file
+	 *
+	 * @param string $file
+	 * @return string
+	 */
+	public function read_file($file)
+	{
+		$this->file = $file;
+		$file_text = join ("", file ($file)); //load files
+		
+		$file_text = preg_replace("/[\r\n]{1,} ([:;])/","\\1",$file_text);
+		
+		return $file_text; // return all text
+	}
+
+	/**
+	 *
+	 * @return unknown
+	 */
+	public function get_event_count()
+	{
+		return $this->event_count;
+	}
+	/**
+	 *
+	 * @return unknown
+	 */
+	public function get_todo_count()
+	{
+		return $this->todo_count;
+	}
+	/**
+	 *
+	 * @param unknown_type $uri
+	 * @return unknown
+	 */
+	public function parse($uri)
+	{
+		$this->cal = array(); // new empty array
+
+		$this->event_count = -1; 
+
+		// read FILE text
+		$this->file_text = $this->read_file($uri);
+
+		$this->file_text = split("[\n]", $this->file_text);
+		
+		// is this text vcalendar standart text ? on line 1 is BEGIN:VCALENDAR
+		if (!stristr($this->file_text[0],'BEGIN:VCALENDAR')) return 'error not VCALENDAR';
+
+		foreach ($this->file_text as $text)
+		{
+			$text = trim($text); // trim one line
+			if (!empty($text))
+			{
+				// get Key and Value VCALENDAR:Begin -> Key = VCALENDAR, Value = begin
+				list($key, $value) = $this->retun_key_value($text);
+				
+				switch ($text) // search special string
+				{
+					case "BEGIN:VTODO":
+						$this->todo_count = $this->todo_count+1; // new todo begin
+						$type = "VTODO";
+						break;
+
+					case "BEGIN:VEVENT":
+						$this->event_count = $this->event_count+1; // new event begin
+						$type = "VEVENT";
+						break;
+
+					case "BEGIN:VCALENDAR": // all other special string
+					case "BEGIN:DAYLIGHT":
+					case "BEGIN:VTIMEZONE":
+					case "BEGIN:STANDARD":
+						$type = $value; // save tu array under value key
+						break;
+
+					case "END:VTODO": // end special text - goto VCALENDAR key
+					case "END:VEVENT":
+
+					case "END:VCALENDAR":
+					case "END:DAYLIGHT":
+					case "END:VTIMEZONE":
+					case "END:STANDARD":
+						$type = "VCALENDAR";
+						break;
+
+					default: // no special string
+						$this->add_to_array($type, $key, $value); // add to array
+						break;
+				}
+			}
+		}
+		return $this->cal;
+	}
+	/**
+	 * Add to $this->ical array one value and key. Type is VTODO, VEVENT, VCALENDAR ... .
+	 *
+	 * @param string $type
+	 * @param string $key
+	 * @param string $value
+	 */
+	public function add_to_array($type, $key, $value)
+	{
+		if ($key == false)
+		{
+			$key = $this->last_key;
+			switch ($type)
+			{
+				case 'VEVENT': $value = $this->cal[$type][$this->event_count][$key].$value;break;
+				case 'VTODO': $value = $this->cal[$type][$this->todo_count][$key].$value;break;
+			}
+		}
+
+		if (($key == "DTSTAMP") or ($key == "LAST-MODIFIED") or ($key == "CREATED")) $value = $this->ical_date_to_unix($value);
+		if ($key == "RRULE" ) $value = $this->ical_rrule($value);
+
+		if (stristr($key,"DTSTART") or stristr($key,"DTEND")) list($key,$value) = $this->ical_dt_date($key,$value);
+
+		switch ($type)
+		{
+			case "VTODO":
+				$this->cal[$type][$this->todo_count][$key] = $value;
+				break;
+
+			case "VEVENT":
+				$this->cal[$type][$this->event_count][$key] = $value;
+				break;
+
+			default:
+				$this->cal[$type][$key] = $value;
+				break;
+		}
+		$this->last_key = $key;
+	}
+	/**
+	 * Parse text "XXXX:value text some with : " and return array($key = "XXXX", $value="value"); 
+	 *
+	 * @param unknown_type $text
+	 * @return unknown
+	 */
+	public function retun_key_value($text)
+	{
+		preg_match("/([^:]+)[:]([\w\W]+)/", $text, $matches);
+		
+		if (empty($matches))
+		{
+			return array(false,$text);
+		} else  {
+			$matches = array_splice($matches, 1, 2);
+			return $matches;
+		}
+
+	}
+	/**
+	 * Parse RRULE  return array
+	 * This is the rrule format thats being parsed "rrule":"FREQ=DAILY;COUNT=99"
+	 * @param unknown_type $value
+	 * @return unknown
+	 */
+	public function ical_rrule($value)
+	{
+		$rrule = explode(';',$value);
+		foreach ($rrule as $line) {
+			$rcontent = explode('=', $line);
+			$result[$rcontent[0]] = $rcontent[1];
+		}
+		return $result;
+	}
+	/**
+	 * Return Unix time from ical date time fomrat (YYYYMMDD[T]HHMMSS[Z] or YYYYMMDD[T]HHMMSS)
+	 *
+	 * @param unknown_type $ical_date
+	 * @return unknown
+	 */
+	public function ical_date_to_unix($ical_date)
+	{
+		$ical_date = str_replace('T', '', $ical_date);
+		$ical_date = str_replace('Z', '', $ical_date);
+
+		// TIME LIMITED EVENT
+		ereg('([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{0,2})([0-9]{0,2})([0-9]{0,2})', $ical_date, $date);
+
+		// UNIX timestamps can't deal with pre 1970 dates
+		if ($date[1] <= 1970)
+		{
+			$date[1] = 1971;
+		}
+		return  mktime($date[4], $date[5], $date[6], $date[2],$date[3], $date[1]);
+	}
+	/**
+	 * Return unix date from iCal date format
+	 *
+	 * @param string $key
+	 * @param string $value
+	 * @return array
+	 */
+	public function ical_dt_date($key, $value)
+	{
+		$value = $this->ical_date_to_unix($value);
+
+		// zjisteni TZID
+		$temp = explode(";",$key);
+		
+		if (empty($temp[1])) // neni TZID
+		{
+			$data = str_replace('T', '', $data);
+			return array($key,$value);
+		}
+		// pridani $value a $tzid do pole
+		$key = 	$temp[0];
+		$temp = explode("=", $temp[1]);
+		$return_value[$temp[0]] = $temp[1];
+		$return_value['unixtime'] = $value;
+		
+		return array($key,$return_value);
+	}
+	/**
+	 * Return sorted eventlist as array or false if calenar is empty
+	 *
+	 * @return unknown
+	 */
+	public function get_sort_event_list()
+	{
+		$temp = $this->get_event_list();
+		if (!empty($temp))
+		{
+			usort($temp, array(&$this, "ical_dtstart_compare"));
+			return	$temp;
+		} else 
+		{
+			return false;
+		}
+	}
+	/**
+	 * Compare two unix timestamp
+	 *
+	 * @param array $a
+	 * @param array $b
+	 * @return integer
+	 */
+	public function ical_dtstart_compare($a, $b)
+	{
+		return strnatcasecmp($a['DTSTART']['unixtime'], $b['DTSTART']['unixtime']);	
+	}
+	/**
+	 * Return eventlist array (not sort eventlist array)
+	 *
+	 * @return array
+	 */
+	public function get_event_list()
+	{
+		return $this->cal['VEVENT'];
+	}
+	/**
+	 * Return todo arry (not sort todo array)
+	 *
+	 * @return array
+	 */
+	public function get_todo_list()
+	{
+		return $this->cal['VTODO'];
+	}
+	/**
+	 * Return base calendar data
+	 *
+	 * @return array
+	 */
+	public function get_calender_data()
+	{
+		return $this->cal['VCALENDAR'];
+	}
+	/**
+	 * Return array with all data
+	 *
+	 * @return array
+	 */
+	public function get_all_data()
+	{
+		return $this->cal;
+	}
+	
+}

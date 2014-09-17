@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>mOQOLD</title>
+    <link rel="stylesheet" type="text/css" href="css/mOQOLD.css" />
+    <link rel="stylesheet" type="text/css" href="ext-3.3.1/resources/css/ext-all.css" />
+    <script type="text/javascript" src="ext-3.3.1/adapter/ext/ext-base.js"></script>
+    <script type="text/javascript" src="ext-3.3.1/ext-all-debug.js"></script>
+    <link rel="stylesheet" type="text/css" href="ext-3.3.1/ux/css/fileuploadfield.css" />
+   
+    <script type="text/javascript" src="ext-3.3.1/ux/FileUploadField.js"></script>
+    <link rel="stylesheet" type="text/css" href="ext-3.3.1/ux/css/Portal.css" />
+    <script type="text/javascript" src="ext-3.3.1/ux/Portal.js"></script>
+    <script type="text/javascript" src="ext-3.3.1/ux/PortalColumn.js"></script>
+    <script type="text/javascript" src="ext-3.3.1/ux/Portlet.js"></script>
+    
+    <link rel="stylesheet" type="text/css" href="ext-3.3.1/ux/css/Spinner.css" />
+    <script type="text/javascript" src="ext-3.3.1/ux/Spinner.js"></script>
+    <script type="text/javascript" src="ext-3.3.1/ux/SpinnerField.js"></script>
+    <link rel="stylesheet" type="text/css" href="calendar/resources/css/extensible-all.css" />
+    <link rel="stylesheet" type="text/css" href="calendar/resources/css/calendar-colors.css" />
+    <script type="text/javascript" src="calendar/extensible-all-debug.js"></script>
+    <script type="text/javascript" src="ext-3.3.1/ux/Ext.ux.Editor.TextField.js"></script>
+    <script type="text/javascript" src="ext-3.3.1/ux/Ext.ux.Editor.TextArea.js"></script>
+    <link rel="stylesheet" type="text/css" href="ext-3.3.1/ux/Ext.ux.form.CheckboxCombo/Ext.ux.form.CheckboxCombo.min.css" />
+    <script type="text/javascript" src="ext-3.3.1/ux/Ext.ux.form.CheckboxCombo/Ext.ux.form.CheckboxCombo.js"></script>
+    <script type="text/javascript" src="ext-3.3.1/ux/Ext.ux.form.DateTimeField.js"></script>
+    <script type="text/javascript" src="ext-ux/Ext.ux.layout.CardLayout.js"></script>
+    <script type="text/javascript" src="ext-ux/Ext.ux.Wiz/src/Wizard.js"></script>
+    <script type="text/javascript" src="ext-ux/Ext.ux.Wiz/src/Card.js"></script>
+    <script type="text/javascript" src="ext-ux/Ext.ux.Wiz/src/Header.js"></script>
+    <link rel="stylesheet" type="text/css" href="ext-ux/Ext.ux.Wiz/src/resources/css/ext-ux-wiz.css" />
+    <script type="text/javascript" src="js/Ext.ux.Wiz.plugins.Card.js"></script>
+    <script type="text/javascript" src="index.php/direct/api"></script>
+    <link rel="stylesheet" type="text/css" href="css/mOQOLD.Activity.css" />
+    <link rel="stylesheet" type="text/css" href="css/mOQOLD.AdminUpdate.css" />
+    <link rel="stylesheet" type="text/css" href="css/mOQOLD.SiteConfig.css" />
+    <style>
+    .x-dd-drag-proxy {
+        display: none !important;
+    }
+</style>
+</head>
+<body topmargin="0" marginheight="0">
+    <div class="wrapper">
+        <div class="logo">
+            <a href="#">
+                <img src="images/moqold_logo.jpg" width="265" height="35" /></a></div>
+        <div class="subNav loggedOut" align="right" style="height: 29px;" id="subNav">
+            <div class="loggedOut">
+                <a href="#Account|type=LogIn">
+                    <img src="images/login_n.jpg" name="login" width="72" height="29" border="0" id="login" /></a>
+                <a href="#Account|type=SignUp">
+                    <img src="images/signup_n.jpg" name="signup" width="84" height="29" border="0" id="signup" /></a>
+            </div>
+            <div class="loggedIn">
+                <span id="welcomeMessage">Welcome {firstName} {lastName}!</span> | <a href="#Admin">
+                    Admin</a> | <a href="#Account|type=Profile">My account</a> | <a href="javascript:mOQOLD.Main.confirmLogout();">
+                        Log out</a>
+            </div>
+        </div>
+        <div class="topNav loggedOut" id="topNav">
+            <div class="button loggedOut">
+                <a href="#Static|page=WhatIsmOQOLD">
+                    <img src="images/whatismoqold_n.jpg" width="170" height="35" border="0" /></a></div>
+            <div class="button loggedOut">
+                <a href="#Static|page=News">
+                    <img src="images/news_n.jpg" width="65" height="35" border="0" /></a></div>
+            <div class="button loggedIn">
+                <a href="#Home">
+                    <img src="images/home_n.jpg" width="66" height="35" border="0" /></a></div>
+            <div class="button loggedIn">
+                <a href="#Calendar">
+                    <img src="images/calendar_n.jpg" width="104" height="35" border="0" /></a></div>
+            <div class="button loggedIn">
+                <a href="#Observations">
+                    <img src="images/observation_n.jpg" width="132" height="35" border="0" /></a></div>
+            <div class="button loggedIn">
+                <a href="#Dashboard">
+                    <img src="images/dashboard_n.jpg" width="92" height="35" border="0" /></a></div>
+            <div class="button loggedIn">
+                <a href="#Falls">
+                    <img src="images/incident_n.jpg" width="92" height="35" border="0" /></a></div>
+            <div class="button loggedIn">
+                <a href="#Residents">
+                    <img src="images/participant_n.jpg" width="125" height="35" border="0" /></a></div>
+
+        </div>
+        <div id="homeContent" class="x-hidden">
+            <div class="banner">
+                <img src="images/home_banner.png" width="998" height="333" /></div>
+            <div class="mainContent">
+                <div class="content">
+                    <img src="images/computer_img.jpg" width="229" height="224" /><br />
+                    <b>Easy to Use</b><br />
+                    An easy to use tool to help improve the quality of life of residents. mOQOLD provides
+                    a secure online solutions which your organization assess the outcomes of your activities
+                    program on residents and clients. Watch the video -> Learn more -><br>
+                    FREE! Get Started here.</div>
+                <div class="content">
+                    <img src="images/tablet_img.jpg" width="216" height="224" /><br />
+                    <b>Safe and Secure</b><br />
+                    Our site has high level security including authentication, access control, and bank-level
+                    security. You control you inputs, access and organizations data. Learn more -></div>
+                <div class="content">
+                    <img src="images/phone_img.jpg" width="188" height="224" /><br />
+                    <b>Hassle Free to Use</b><br />
+                    mOQOLD is a free online assessment tool with automatic updated mobile software so
+                    you don’t need of a computer department to use. There are no commitments and the
+                    basic plan is free to use! Learn more ->.</div>
+            </div>
+        </div>
+        <div class="secpgBanner x-hidden" id="internalBanner">
+            <img src="images/secpg_noline_banner.png" width="998" height="144" /></div>
+        <div class="secpgContentNoLine" id="mainContent">
+        </div>
+        <div class="footer" align="center">
+            <div>
+                <a href="#Static|page=About">About</a> | <a href="#Static|page=Help">Get Help</a>
+                | <a href="#Static|page=Privacy">Privacy</a> | <a href="#Static|page=Security">Security</a>
+                | <a href="#Static|page=Terms">Terms of use</a></div>
+                <div align="center"> &copy; Benten Technologies, Inc. All rights reserved </div>
+        </div>
+        
+    </div>
+    <textarea class="x-hidden" id="admin-menu-tpl">
+            <div class="leftNav"> 
+            <tpl for=".">
+   	            <div class="header">{text}</div>
+                <div class="accordionItems" style="display:none;">
+                <tpl for="items">
+          	        <div class="leftbutton{[xindex === xcount ? 'NoLine' : '']}">
+          		        <div class="button"><img src="images/{icon}.png" width="48" height="47" /></div> 
+         		        <div class="buttonText"><a href="#Admin|module={href}">{text}</a></div> 
+          	        </div> 
+                </tpl>
+                </div>
+            </tpl>
+        </textarea>
+    <form id="history-form" class="x-hidden">
+    <input type="hidden" id="x-history-field" />
+    <iframe id="x-history-frame"></iframe>
+    </form>
+    <script type="text/javascript" src="ext-ux/Ext.Calendar-fix.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.MaintenanceGridAbstract.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.MaintenanceGridDefaultAbstract.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Stores.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Security.js"></script>
+    <script type="text/javascript" src="js/Ext.ux.Combo.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Activity.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.ActivityDetail.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.AddWindow.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.AidList.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.AllergyList.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Animal.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.BodyPart.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Calendar.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.ColorWindow.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Permission.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Contact.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Dashboard.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.EditWindow.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Falls.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Footwear.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Home.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.HomeMessages.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.IncidentActivity.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.IncidentCause.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Injury.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.InjuryList.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.LeftMenu.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Location.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.LoginSignup.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Noise.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.ObservationList.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.OrgInfo.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Profile.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.RedFlag.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.ResidentList.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.SiteConfiguration.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.SpecialCondition.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Static.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Twitter.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.User.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Weather.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.App.js"></script>
+    <script type="text/javascript" src="js/App.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Setup.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.QOLScore.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.Dimension.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.ActivityGrid.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.ImageViewer.js"></script>
+    <script type="text/javascript" src="js/Ext.DataView.DragSelector.js"></script>
+    <script type="text/javascript" src="js/Ext.DataView.LabelEditor.js"></script>
+    <script type="text/javascript" src="js/mOQOLD.UserRole.js"></script>
+</body>
+</html>

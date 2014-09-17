@@ -1,0 +1,16 @@
+body:after{
+	content: url(../sencha-touch-1.0.1a/resources/themes/images/default/pictos/doc_compose2.png)
+			url(../sencha-touch-1.0.1a/resources/themes/images/default/pictos/help_black.png)
+			url(../sencha-touch-1.0.1a/resources/themes/images/default/pictos/chart1.png)
+			url(../sencha-touch-1.0.1a/resources/themes/images/default/pictos/search_black.png)
+			url(../sencha-touch-1.0.1a/resources/themes/images/default/pictos/calendar.png)
+			url(../sencha-touch-1.0.1a/resources/themes/images/default/pictos/settings.png)
+			url(../sencha-touch-1.0.1a/resources/themes/images/default/pictos/user.png)
+			url(../sencha-touch-1.0.1a/resources/themes/images/default/pictos/photo_black2.png)
+			url(../sencha-touch-1.0.1a/resources/themes/images/default/pictos/lock_closed.png);
+	display:none;
+}
+
+.preload {
+	display: none;
+}

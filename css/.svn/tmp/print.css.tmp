@@ -1,0 +1,27 @@
+<<<<<<< .mine
+/*
+	Print.css
+	Print stylesheet for mOQOLD
+
+	How to include:
+	<link rel="stylesheet" href="css/print.css" type="text/css" media="print" />
+*/
+#logo, #subNav, #topNav, #homeContent, #internalBanner, #footer, #activitygrid, #activitygrid-xsplit {
+	display: none !important;
+}
+body {
+	background: #fff !important;
+}=======
+﻿/*
+	Print.css
+	Print stylesheet for mOQOLD
+
+	How to include:
+	<link rel="stylesheet" href="css/print.css" type="text/css" media="print" />
+*/
+#logo, #subNav, #topNav, #homeContent, #internalBanner, #footer, #activitygrid, #activitygrid-xsplit {
+	display: none !important;
+}
+body {
+	background: #fff !important;
+}>>>>>>> .r1790

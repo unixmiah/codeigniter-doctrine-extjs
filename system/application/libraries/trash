@@ -1,0 +1,411 @@
+<?php
+
+class CalendarAPI extends ControllerBase {
+	protected $tableName = "ActivityDetail";
+	protected $pageName = "Calendar";
+	protected $prefToTable = array("1" => "LocationValue", "2" => "ContactValue", "3" => "DimensionValue");
+	protected $prefToField = array("1" => "locationName", "2" => "lastName", "3" => "dimensionName");
+	protected $prefToWhere = array("1" => "isActive = 1", "2" => "(inActiveDate >= CURDATE() OR inActiveDate = '0000-00-00' or inActiveDate is null)", "3" => "isActive = 1"); 
+	protected $colorArr = array(
+		"FA7166" => "1",
+		"CF2424" => "2",
+		"A01A1A" => "3",
+		"7E3838" => "4",
+		"CA7609" => "5",
+		"F88015" => "6",
+		"EDA12A" => "7",
+		"D5B816" => "8",
+		"E281CA" => "9",
+		"BF53A4" => "10",
+		"9D3283" => "11",
+		"7A0F60" => "12",
+		"542382" => "13",
+		"7742A9" => "14",
+		"8763CA" => "15",
+		"B586E2" => "16",
+		"7399F9" => "17",
+		"4E79E6" => "18",
+		"2951B9" => "19",
+		"133897" => "20",
+		"1A5173" => "21",
+		"1A699C" => "22",
+		"3694B7" => "23",
+		"64B9D9" => "24",
+		"A8C67B" => "25",
+		"83AD47" => "26",
+		"2E8F0C" => "27",
+		"176413" => "28",
+		"0F4C30" => "29",
+		"386651" => "30",
+		"3EA987" => "31",
+		"7BC3B5" => "32",
+	);
+	
+	protected function prepareListQuery($q) {
+		$q->from("ActivityDetail a");
+		$orgID = $this->getOrgID();
+		$q->where("orgID = $orgID");
+	}
+	
+	protected function calAbstract() {
+		$q = Doctrine_Query::create()->select('preferenceInd')->from('SiteSpecificValue')->where('orgID = ?', $this->getOrgID());
+		$q->execute();
+		$result = $q->execute(array(), Doctrine::HYDRATE_ARRAY);
+		$prefInd = 1;
+		if (count($result) > 0) {
+			$prefInd = $result[0]["preferenceInd"];
+		}
+		if ($prefInd == 0) {
+			$prefInd = 1;
+		}
+		
+		$tableName = $this->prefToTable[$prefInd];
+		$fieldName = $this->prefToField[$prefInd];
+		
+		return array("prefInd" => $prefInd, "tableName" => $tableName, "fieldName" => $fieldName);
+	}
+	
+	protected function getCID($calendars, $id) {
+		foreach ($calendars as $key => $value) {
+			$cal = $calendars[$key];
+			if ($cal["ID"] == $id) {
+				return $id;
+			}
+		}
+	}
+	  
+	/**
+      * @remotable
+      */
+	public function getCal() {
+		$calendars = array();
+		$preferences = $this->calAbstract();
+		$prefInd = $preferences["prefInd"];
+		$tableName = $preferences["tableName"];
+		$fieldName = $preferences["fieldName"];
+		$whereClause = $this->prefToWhere[$prefInd];
+		
+		$q = Doctrine_Query::create()->select($fieldName." as title, colorCode")->from($tableName)->where('orgID = ?', $this->getOrgID())->AndWhere($whereClause);
+		
+		$q->execute();
+		$result = $q->execute(array(), Doctrine::HYDRATE_ARRAY);
+		
+   		
+		//$colors = array("1" => 2, "2" => 22, "3" => 7, "4" => 26, "5" => 13, "6" => 3);
+		foreach ($result as $key => $value) {
+			$calArr = $result[$key];
+			$id = $value["ID"];
+			$color = 1;
+			$color_arr = $this->colorArr;
+			if (array_key_exists($value['colorCode'], $color_arr)) {
+				$color = $this->colorArr[$value['colorCode']];
+			}
+			
+			$calendars[] = array("ID" => $id, "title" => $value["title"], "color" => $color);
+			
+		}
+		
+		
+   		
+		$return = (object) array();
+		$return->total = array(count($calendars));
+		$return->success = true;
+		$return->items = $calendars;
+		
+		return $return;
+	}
+	
+	/**
+      * @remotable
+      */
+	public function getEvent() {
+		$preferences = $this->calAbstract();
+		$prefInd = $preferences["prefInd"];
+		$tableName = $preferences["tableName"];
+		$fieldName = $preferences["fieldName"];
+		$calendars = $this->getCal();
+		$calendars = $calendars->items;
+		$orgID = $this->getOrgID();
+		
+		$events = array();
+		
+		//Process Query 
+		$q = Doctrine_Manager::getInstance()->getCurrentConnection();
+		$query = "SELECT
+   					a.ID,
+   					case
+       					when ((select preferenceInd from site_specific_value where orgID = 1) = 1) then a.locationTypeID
+       					when ((select preferenceInd from site_specific_value where orgID = 1) = 2) then a.staffID
+       					when ((select preferenceInd from site_specific_value where orgID = 1) = 3) then av.dimensionID
+   					end as cid,
+   					a.orgID,
+   					a.actDtlStime as start,
+   					a.actDtlEtime as end,
+   					av.activityName as title,
+   					'false' as ad,
+   					if(o.id is null, 'false', 'true') as rem
+   				FROM 
+   					activity_detail a
+				LEFT JOIN 
+					observ_detail o ON a.ID = o.actDetailID
+				JOIN 
+					activity_value av ON a.activityID = av.ID
+				WHERE 
+					a.orgID = $orgID
+				GROUP BY 
+					a.ID";
+		
+		$result = $q->execute($query);
+	   
+		
+   		foreach($result as $key => $value){	
+   			
+			if (isset($value['title'])) {
+
+				$cid = $value['cid'];
+					
+				$id = $value["ID"];
+					
+				$tmpArr = array(
+						"id" => $id,
+						"cid" => $cid,
+						"ad" => false,
+						"title" => $value['title'],
+						"start" => $value['start'],
+						"end" => $value['end']
+					);
+
+					
+				$tmpArr["rem"] = $value['rem'];
+					
+				$events[] = $tmpArr;
+			}
+		
+   		}
+		
+   		
+		$return = (object) array();
+		$return->total = array(count($events));
+		$return->success = true;
+		$return->items = $events;
+		
+		return $return;
+	}
+}
+
+
+
+
+
+<?php
+
+class CalendarAPI extends ControllerBase {
+	protected $tableName = "ActivityDetail";
+	protected $pageName = "Calendar";
+	protected $prefToTable = array("1" => "LocationValue", "2" => "ContactValue", "3" => "DimensionValue");
+	protected $prefToField = array("1" => "locationName", "2" => "lastName", "3" => "dimensionName");
+	protected $prefToWhere = array("1" => "isActive = 1", "2" => "(inActiveDate >= CURDATE() OR inActiveDate = '0000-00-00' or inActiveDate is null)", "3" => "isActive = 1"); 
+	protected $colorArr = array(
+		"FA7166" => "1",
+		"CF2424" => "2",
+		"A01A1A" => "3",
+		"7E3838" => "4",
+		"CA7609" => "5",
+		"F88015" => "6",
+		"EDA12A" => "7",
+		"D5B816" => "8",
+		"E281CA" => "9",
+		"BF53A4" => "10",
+		"9D3283" => "11",
+		"7A0F60" => "12",
+		"542382" => "13",
+		"7742A9" => "14",
+		"8763CA" => "15",
+		"B586E2" => "16",
+		"7399F9" => "17",
+		"4E79E6" => "18",
+		"2951B9" => "19",
+		"133897" => "20",
+		"1A5173" => "21",
+		"1A699C" => "22",
+		"3694B7" => "23",
+		"64B9D9" => "24",
+		"A8C67B" => "25",
+		"83AD47" => "26",
+		"2E8F0C" => "27",
+		"176413" => "28",
+		"0F4C30" => "29",
+		"386651" => "30",
+		"3EA987" => "31",
+		"7BC3B5" => "32",
+	);
+	
+	protected function prepareListQuery($q) {
+		$q->from("ActivityDetail a");
+		$orgID = $this->getOrgID();
+		$q->where("orgID = $orgID");
+	}
+	
+	protected function calAbstract() {
+		$q = Doctrine_Query::create()->select('preferenceInd')->from('SiteSpecificValue')->where('orgID = ?', $this->getOrgID());
+		$q->execute();
+		$result = $q->execute(array(), Doctrine::HYDRATE_ARRAY);
+		$prefInd = 1;
+		if (count($result) > 0) {
+			$prefInd = $result[0]["preferenceInd"];
+		}
+		if ($prefInd == 0) {
+			$prefInd = 1;
+		}
+		
+		$tableName = $this->prefToTable[$prefInd];
+		$fieldName = $this->prefToField[$prefInd];
+		
+		return array("prefInd" => $prefInd, "tableName" => $tableName, "fieldName" => $fieldName);
+	}
+	
+	protected function getCID($calendars, $id) {
+		foreach ($calendars as $key => $value) {
+			$cal = $calendars[$key];
+			if ($cal["ID"] == $id) {
+				return $id;
+			}
+		}
+	}
+	  
+	/**
+      * @remotable
+      */
+	public function getCal() {
+		$calendars = array();
+		$preferences = $this->calAbstract();
+		$prefInd = $preferences["prefInd"];
+		$tableName = $preferences["tableName"];
+		$fieldName = $preferences["fieldName"];
+		$whereClause = $this->prefToWhere[$prefInd];
+		
+		$q = Doctrine_Query::create()->select($fieldName." as title, colorCode")->from($tableName)->where('orgID = ?', $this->getOrgID())->AndWhere($whereClause);
+		
+		$q->execute();
+		$result = $q->execute(array(), Doctrine::HYDRATE_ARRAY);
+		
+   		
+		//$colors = array("1" => 2, "2" => 22, "3" => 7, "4" => 26, "5" => 13, "6" => 3);
+		foreach ($result as $key => $value) {
+			$calArr = $result[$key];
+			$id = $value["ID"];
+			$color = 1;
+			$color_arr = $this->colorArr;
+			if (array_key_exists($value['colorCode'], $color_arr)) {
+				$color = $this->colorArr[$value['colorCode']];
+			}
+			
+			$calendars[] = array("ID" => $id, "title" => $value["title"], "color" => $color);
+			
+		}
+		
+		
+   		
+		$return = (object) array();
+		$return->total = array(count($calendars));
+		$return->success = true;
+		$return->items = $calendars;
+		
+		return $return;
+	}
+	
+	/**
+      * @remotable
+      */
+	public function getEvent() {
+		$preferences = $this->calAbstract();
+		$prefInd = $preferences["prefInd"];
+		$tableName = $preferences["tableName"];
+		$fieldName = $preferences["fieldName"];
+		$calendars = $this->getCal();
+		$calendars = $calendars->items;
+		
+		$events = array();
+		
+		//Process Query 
+		/* $q = Doctrine_Manager::getInstance()->getCurrentConnection();
+		$query = "SELECT a.ID AS actDetailId, a.orgID, a.actDtlStime, a.actDtlEtime, av.activityName, 
+				  av.dimensionID, o.actDetailID 
+				  FROM activity_detail a
+				  LEFT JOIN observ_detail o ON a.ID = o.actDetailID
+ 				  LEFT JOIN activity_value av ON a.activityID = av.ID
+				  WHERE a.orgID =1
+		";
+		$result = $q->execute("INSERT INTO `handheld_usability_log` (`ID`, `orgID`, `sessionID`, `actionName`, `actionDuration`, `rTime`, `rUser`, `deviceID`, `actionStime`, `actionEtime`) VALUES (NULL, '$orgID', '$sessionIDVal', '$actionNameVal', '$actionDurationVal', '$rTime', '$rUser', '$deviceIDVal', '$actionStimeVal', '$actionEtimeVal')");
+	    */
+		
+		$q = Doctrine_Query::create()->select('*')->from('ActivityDetail')->where('orgID = ?', $this->getOrgID());
+		//->andWhere(startdate enddate);
+		//combine 3 queries
+		//echo check each query exec time();		
+		//$q->andWhere("actDtlStime >=?", "2011-08-01");
+		//$q->andWhere("actDtlEtime <=?", "2011-08-31");
+
+
+		$q->execute();
+		$result = $q->execute(array(), Doctrine::HYDRATE_ARRAY);
+
+   		
+   		foreach($result as $key => $value){
+   			//print_r
+			$q = Doctrine_Query::create()->select('activityName,dimensionID')->from('ActivityValue')->where('ID = ?', $value['activityID']);
+			$q->execute();
+			$result2 = $q->execute(array(), Doctrine::HYDRATE_ARRAY);
+			//measure time
+			//return "<br>Activity Value took:".date('m/d/Y h:i:s a', time())."<br>";	
+
+			foreach ($result2 as $key2 => $value2){
+				//print_r
+				if (isset($value2['activityName'])) {
+					if ($prefInd == "1") {
+						$id = $value["locationTypeID"];
+					} elseif ($prefInd == "2") {
+						$id = $value["staffID"];
+					} elseif ($prefInd == "3") {
+						$id = $value2["dimensionID"];
+					}
+					$cid = $this->getCID($calendars, $id);
+					
+					$id = $value["ID"];
+					
+					$o = Doctrine_Query::create()->select("ID")->from("ObservDetail")->where("actDetailID = ?", $id);
+					$o->execute();
+					$ob_result = $o->execute(array(), Doctrine::HYDRATE_ARRAY);
+					
+					//measure time
+					//return "<br>Obvservation Detail took:".date('m/d/Y h:i:s a', time())."<br>";	
+					
+					$tmpArr = array(
+						"id" => $id,
+						"cid" => $cid,
+						"ad" => false,
+						"title" => $value2['activityName'],
+						"start" => $value['actDtlStime'],
+						"end" => $value['actDtlEtime']
+					);
+					
+					if (count($ob_result) > 0) {
+						$tmpArr["rem"] = true;
+					}
+					
+					$events[] = $tmpArr;
+				}
+			}
+		}
+		
+		
+   		
+		$return = (object) array();
+		$return->total = array(count($events));
+		$return->success = true;
+		$return->items = $events;
+		
+		return $return;
+	}
+}
+
